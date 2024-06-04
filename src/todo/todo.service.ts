@@ -1,26 +1,50 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Todo } from 'src/typeorm/entities/Todo';
 import { CreateTodoDto } from 'src/dtos/todos/createTodo.dto';
 import { EditTodoDto } from 'src/dtos/todos/editTodo.dto';
 import { Status } from 'src/enums/status.enum';
+import { User } from 'src/typeorm/entities/User';
 @Injectable()
 export class TodoService {
   constructor(
     @InjectRepository(Todo) private todoRepository: Repository<Todo>,
+    @InjectRepository(User) private userRepository: Repository<User>,
   ) {}
-  async createTodo(createTodo: CreateTodoDto) {
+
+  private async validateUser(userId: number) {
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if (!user) {
+      throw new UnauthorizedException('Login to create todo');
+    }
+    return user;
+  }
+  async createTodo(userId: number, createTodo: CreateTodoDto) {
+    const user = await this.validateUser(userId);
     const newTodo = this.todoRepository.create({
       ...createTodo,
+      user: user,
       status: Status.Active,
       createdAt: new Date(),
     });
-    return await this.todoRepository.save(newTodo);
+    return this.todoRepository.save(newTodo);
   }
   //for toggling the status using this api only
-  async editTodo(id: number, editTodo: EditTodoDto) {
-    const todo = await this.todoRepository.findOneBy({ id });
+  async editTodo(userId: number, id: number, editTodo: EditTodoDto) {
+    const todo = await this.todoRepository.findOne({
+      where: {
+        id: id,
+        user: {
+          id: userId,
+        },
+      },
+    });
     if (!todo) {
       throw new NotFoundException('No todo found for this id');
     }
@@ -29,24 +53,44 @@ export class TodoService {
     return this.todoRepository.save(todo);
   }
 
-  async deleteTodo(id: number) {
-    const todo = await this.todoRepository.findOneBy({ id });
+  async deleteTodo(id: number, userId: number) {
+    const todo = await this.todoRepository.findOne({
+      where: {
+        id,
+        user: {
+          id: userId,
+        },
+      },
+    });
 
     if (!todo) {
       throw new NotFoundException('Not found todo');
     }
-    this.todoRepository.delete(id);
+    await this.todoRepository.delete(id);
     return todo;
   }
-  async getTodo(id: number) {
-    const todo = this.todoRepository.findOneBy({ id });
+  async getTodo(userId: number, id: number) {
+    const todo = await this.todoRepository.findOne({
+      where: {
+        id: id,
+        user: {
+          id: userId,
+        },
+      },
+    });
     if (!todo) {
       throw new NotFoundException('Todo not found');
     }
     return todo;
   }
 
-  async getAllTodos() {
-    return this.todoRepository.find({});
+  async getAllTodos(userId: number) {
+    return this.todoRepository.find({
+      where: {
+        user: {
+          id: userId,
+        },
+      },
+    });
   }
 }
