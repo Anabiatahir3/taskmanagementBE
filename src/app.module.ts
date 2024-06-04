@@ -6,6 +6,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './typeorm/entities/User';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { TodoModule } from './todo/todo.module';
+import { Todo } from './typeorm/entities/Todo';
 
 @Module({
   // imports: [
@@ -34,11 +36,12 @@ import { AuthModule } from './auth/auth.module';
       username: 'root',
       password: '12345',
       database: 'tododb',
-      entities: [User],
+      entities: [User, Todo],
       synchronize: true,
     }),
     UsersModule,
     AuthModule,
+    TodoModule,
   ],
   controllers: [AppController],
   providers: [AppService],
