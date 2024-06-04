@@ -1,6 +1,7 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { Role } from 'src/enums/roles.enum';
 import { Exclude } from 'class-transformer';
+import { Todo } from './Todo';
 
 @Entity({ name: 'users' })
 export class User {
@@ -16,4 +17,7 @@ export class User {
 
   @Column({ type: 'enum', enum: Role, nullable: true })
   role: Role;
+
+  @OneToMany(() => Todo, (todo) => todo.user)
+  todos: Todo[];
 }
