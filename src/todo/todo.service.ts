@@ -84,13 +84,24 @@ export class TodoService {
     return todo;
   }
 
-  async getAllTodos(userId: number) {
-    return this.todoRepository.find({
-      where: {
-        user: {
-          id: userId,
+  async getAllTodos(userId: number, status: Status) {
+    if (!status) {
+      return this.todoRepository.find({
+        where: {
+          user: {
+            id: userId,
+          },
         },
-      },
-    });
+      });
+    } else {
+      return this.todoRepository.find({
+        where: {
+          user: {
+            id: userId,
+          },
+          status: status,
+        },
+      });
+    }
   }
 }

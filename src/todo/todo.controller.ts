@@ -9,6 +9,7 @@ import {
   Body,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import { CreateTodoDto } from 'src/dtos/todos/createTodo.dto';
 import { TodoService } from './todo.service';
@@ -17,6 +18,7 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Role } from 'src/enums/roles.enum';
 import { Roles } from 'src/auth/decorators/role.decorator';
+import { Status } from 'src/enums/status.enum';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.User)
@@ -45,9 +47,12 @@ export class TodoController {
   }
 
   @Get('/all')
-  async getAllTodos(@Request() req: any) {
+  async getAllTodos(
+    @Request() req: any,
+    @Query('status') status?: Status.Active | Status.Completed,
+  ) {
     const userId = req.user.userId;
-    return this.todoService.getAllTodos(userId);
+    return this.todoService.getAllTodos(userId, status);
   }
   @Get(':id')
   async getTodo(@Param('id', ParseIntPipe) id: number, @Request() req) {
