@@ -15,7 +15,7 @@ export class UserErrorInterceptor implements NestInterceptor {
       .handle()
       .pipe(
         catchError((err) =>
-          throwError(() => new HttpException('Email should be unique', 500)),
+          throwError(() => new HttpException('Internal server error', 500)),
         ),
       );
   }

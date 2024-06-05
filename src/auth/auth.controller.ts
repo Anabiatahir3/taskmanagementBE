@@ -19,6 +19,7 @@ import { Roles } from './decorators/role.decorator';
 import { Role } from 'src/enums/roles.enum';
 import { RolesGuard } from './guards/roles.guard';
 import { DEFAULT_CIPHERS } from 'tls';
+import { RefreshTokenGuard } from './guards/refreshToken.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -54,5 +55,21 @@ export class AuthController {
   @Delete(':id')
   async deleteUser(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.deleteUser(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/logout')
+  async logout(@Request() req: any) {
+    const userId = req.user.userId;
+    return this.authService.logout(userId);
+  }
+
+  @UseGuards(RefreshTokenGuard)
+  @Get('/refresh')
+  async refreshToken(@Request() req: any) {
+    console.log(req.user);
+    const userId = req.user.sub;
+    const refreshToken = req.user.refreshToken;
+    return this.authService.refreshToken(userId, refreshToken);
   }
 }

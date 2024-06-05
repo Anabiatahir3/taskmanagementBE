@@ -18,6 +18,9 @@ export class User {
   @Column({ type: 'enum', enum: Role, nullable: true })
   role: Role;
 
+  @Column({ nullable: true })
+  refreshToken: string;
+
   @OneToMany(() => Todo, (todo) => todo.user)
   todos: Todo[];
 }

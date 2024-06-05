@@ -18,32 +18,41 @@ export class UsersService {
     private jwtService: JwtService,
   ) {}
   async createUser(createDto: CreateDto) {
-    let user: User = new User();
+    const existingUser = await this.findUser(createDto.email);
+    if (existingUser) {
+      throw new BadRequestException('User with email already exists');
+    }
+
+    const user = new User();
     user.email = createDto.email;
     user.password = await bcrypt.hash(createDto.password, 10);
     user.role = createDto.role || Role.User;
     const newUser = await this.UserRepository.save(user);
+
+    // Generate and save refresh token
     const payload = {
       sub: newUser.id,
       email: newUser.email,
       role: newUser.role,
     };
+    const refresh_token = this.jwtService.sign(payload, { expiresIn: '7d' });
+    newUser.refreshToken = refresh_token;
+    await this.UserRepository.save(newUser);
+
+    // Generate access token
     const access_token = this.jwtService.sign(payload);
     const expirationTime = this.jwtService.decode(access_token).exp;
-
-    // Get the current time in seconds (Unix epoch time)
     const currentTime = Math.floor(Date.now() / 1000);
-
-    // Calculate the duration until expiration (in seconds)
     const expiresIn = expirationTime - currentTime;
 
     return {
-      access_token: access_token,
-      expiresIn: expiresIn,
+      access_token,
+      expiresIn,
+      refresh_token,
     };
   }
-  findUser(email: string): Promise<User> {
-    return this.UserRepository.findOneBy({ email });
+  async findUser(email: string): Promise<User> {
+    return await this.UserRepository.findOneBy({ email });
   }
   getUsers() {
     return this.UserRepository.find({});
