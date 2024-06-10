@@ -20,8 +20,7 @@ import { Role } from 'src/enums/roles.enum';
 import { Roles } from 'src/auth/decorators/role.decorator';
 import { Status } from 'src/enums/status.enum';
 
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.User)
+@UseGuards(JwtAuthGuard)
 @Controller('todo')
 export class TodoController {
   constructor(private todoService: TodoService) {}

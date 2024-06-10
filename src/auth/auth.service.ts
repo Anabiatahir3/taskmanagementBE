@@ -27,13 +27,19 @@ export class AuthService {
     if (isPasswordMatch) {
       return user;
     }
+    if (!isPasswordMatch) {
+      throw new BadRequestException('Invalid credentials');
+    }
     return null;
   }
 
   private async generateTokens(user: User) {
     const payload = { sub: user.id, email: user.email, role: user.role };
     const accessToken = this.jwtService.sign(payload);
-    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+    const refreshToken = this.jwtService.sign(
+      { sub: user.id },
+      { expiresIn: '7d' },
+    );
 
     user.refreshToken = refreshToken;
     await this.userRepository.save(user);
@@ -43,9 +49,9 @@ export class AuthService {
     const expiresIn = expirationTime - currentTime;
 
     return {
-      accessToken,
-      refreshToken,
-      expiresIn,
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      expiresIn: expiresIn,
     };
   }
 
